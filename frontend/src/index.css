@@ -1,0 +1,13 @@
+/* * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f8f7f4;
+  color: #1f2937;
+} */
+
+:root{font-family:'DM Sans',sans-serif;color:#20332d;background:#f8f8f4;font-synthesis:none;text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;font-optical-sizing:auto;font-weight:400;--ink:#20332d;--forest:#244f43;--forest-dark:#173b31;--cream:#f8f8f4;--paper:#fffefa;--muted:#77817a;--line:#e3e7df;--orange:#e7b66f;--mint:#dcebe1;--serif:Georgia,'Times New Roman',serif}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:320px}button,input,select,textarea{font:inherit}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #e7b66f;outline-offset:3px}button:disabled{opacity:.6;cursor:not-allowed}a{color:inherit}::selection{background:#d8e9dd;color:#173b31}
