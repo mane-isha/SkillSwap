@@ -536,8 +536,8 @@
 //================
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
-
-const API = 'http://localhost:5000/api';
+//const API = 'http://localhost:5000/api';
+const API = 'https://skillswap-ny9i.onrender.com/api';
 const CATEGORIES = ['Technology', 'Design', 'Business', 'Languages', 'Arts & Music', 'Academics', 'Other'];
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 const EMPTY_SKILL = { title: '', category: 'Technology', description: '', level: 'Beginner', learningType: 'Exchange', price: '' };
