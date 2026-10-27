@@ -536,8 +536,12 @@
 //================
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import './App.css';
+import SessionWorkspace from './SessionWorkspace';
 //const API = 'http://localhost:5000/api';
-const API = 'https://skillswap-ny9i.onrender.com/api';
+const API = (
+  import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+).replace(/\/+$/, '');
+// const API = 'https://skillswap-ny9i.onrender.com/api';
 const CATEGORIES = ['Technology', 'Design', 'Business', 'Languages', 'Arts & Music', 'Academics', 'Other'];
 const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
 const EMPTY_SKILL = { title: '', category: 'Technology', description: '', level: 'Beginner', learningType: 'Exchange', price: '' };
@@ -613,9 +617,70 @@ function Dashboard({ user, go, notify, initialTab = 'overview', createListing = 
 {tab === 'outgoing' && <section className="dash-panel"><div className="panel-heading"><div><span className="eyebrow">YOUR LEARNING JOURNEY</span><h2>My learning requests</h2></div></div>{outgoing.filter(r => r.status === 'Pending' || r.status === 'Accepted').length ? outgoing.filter(r => r.status === 'Pending' || r.status === 'Accepted').map(r => <RequestRow key={r._id} request={r} direction="outgoing" onStatus={changeRequest} onCancel={cancelRequest} />) : <div className="empty-state"><span>↗</span><h3>Ready to learn something new?</h3><p>Explore the marketplace and send a request to a student whose skill interests you.</p><button className="btn btn-dark" onClick={() => go('explore')}>Explore skills ↗</button></div>}</section>}
 {tab === 'history' && <section className="dash-panel"><div className="panel-heading"><div><span className="eyebrow">PAST AND CLOSED REQUESTS</span><h2>Request history</h2></div></div>{history.length ? history.map(r => <RequestRow key={`${r.direction}-${r._id}`} request={r} direction={r.direction.toLowerCase()} onStatus={changeRequest} onCancel={cancelRequest} />) : <div className="empty-state"><span>◷</span><h3>Your history will grow here.</h3><p>Accepted, rejected, and cancelled requests will be saved here.</p></div>}</section>}</section></main>;
 }
+
 function RequestRow({ request, direction, onStatus, onCancel }) {
-  const person = direction === 'incoming' ? request.requester : request.provider;
-  return <article className="request-row"><span className="request-avatar">{initials(person?.name)}</span><div className="request-info"><strong>{direction === 'incoming' ? person?.name || 'Student' : request.skill?.title || 'Skill listing'}</strong><span>{direction === 'incoming' ? request.skill?.title || 'Listing removed' : `Provider: ${person?.name || 'Student'}`}</span>{request.message && <p>“{request.message}”</p>}<small>{dateLabel(request.createdAt)} · <span className={`status status-${String(request.status).toLowerCase()}`}>{request.status}</span></small></div><div className="request-actions">{direction === 'incoming' && request.status === 'Pending' ? <><button className="btn btn-dark btn-small" onClick={() => onStatus(request._id, 'Accepted')}>Accept</button><button className="btn btn-outline btn-small" onClick={() => onStatus(request._id, 'Rejected')}>Decline</button></> : direction === 'outgoing' && request.status === 'Pending' ? <button className="btn btn-outline btn-small" onClick={() => onCancel(request._id)}>Cancel request</button> : null}</div></article>;
+  const [showWorkspace, setShowWorkspace] = useState(false);
+
+  const person =
+    direction === 'incoming'
+      ? request.learner || request.requester
+      : request.provider || request.skill?.offeredBy;
+
+  const personName = person?.name || person?.username || 'Member';
+  const accepted = request.status === 'Accepted';
+
+  return (
+    <article className="request-row">
+      <div className="request-row-info">
+        <h3>{request.skill?.title || request.skill?.name || 'Skill session'}</h3>
+        <p>
+          {direction === 'incoming' ? 'Learner' : 'Provider'}: {personName}
+        </p>
+        {request.message && <p>{request.message}</p>}
+        <p>
+          Status: <strong>{request.status}</strong>
+        </p>
+      </div>
+
+      {request.status === 'Pending' && direction === 'incoming' && (
+        <div className="request-row-actions">
+          <button onClick={() => onStatus(request._id, 'Accepted')}>
+            Accept request
+          </button>
+          <button onClick={() => onStatus(request._id, 'Rejected')}>
+            Decline
+          </button>
+        </div>
+      )}
+
+      {request.status === 'Pending' && direction === 'outgoing' && (
+        <button onClick={() => onCancel(request._id)}>
+          Cancel request
+        </button>
+      )}
+
+      {accepted && (
+        <div className="request-row-actions">
+          <button
+            type="button"
+            onClick={() => setShowWorkspace(value => !value)}
+          >
+            {showWorkspace ? 'Close workspace ↑' : 'Continue session ↗'}
+          </button>
+        </div>
+      )}
+
+      {showWorkspace && accepted && (
+        <div className="request-session-container">
+          <SessionWorkspace
+            request={request}
+            direction={direction}
+            api={api}
+          />
+        </div>
+      )}
+    </article>
+  );
 }
 
 export default function App() {
@@ -629,4 +694,19 @@ export default function App() {
   if (page === 'login' || page === 'signup') return <><AuthPage mode={page} go={go} onSuccess={successAuth} />{toast && <Toast toast={toast} onClose={() => setToast(null)} />}</>;
   return <div className="app-shell"><Nav user={user} page={page} go={go} logout={logout} />{page === 'home' && <Home go={go} stats={stats} skills={featured} user={user} />}{page === 'explore' && <Explore user={user} initialCategory={exploreOptions.category} go={go} notify={notify} />}{page === 'dashboard' && (user ? <Dashboard key={user.id} user={user} go={go} notify={notify} initialTab={dashOptions.tab} createListing={dashOptions.create} onUserUpdate={setUser} /> : <main className="auth-required"><h1>Your workspace is waiting.</h1><p>Log in to manage your skills and learning requests.</p><button className="btn btn-dark" onClick={() => go('login')}>Log in ↗</button></main>)}{toast && <Toast toast={toast} onClose={() => setToast(null)} />}</div>;
 }
-function Toast({ toast, onClose }) { return <div key={toast.key} className={`toast ${toast.kind === 'error' ? 'toast-error' : ''}`} role="status"><span>{toast.kind === 'error' ? '!' : '✓'}</span>{toast.message}<button onClick={onClose} aria-label="Dismiss notification">×</button></div>; }
+
+function Toast({ toast, onClose }) {
+  return (
+    <div
+      key={toast.key}
+      className={`toast ${toast.kind === 'error' ? 'toast-error' : ''}`}
+      role="status"
+    >
+      <span>{toast.kind === 'error' ? '!' : '✓'}</span>
+      {toast.message}
+      <button onClick={onClose} aria-label="Dismiss notification">
+        ×
+      </button>
+    </div>
+  );
+}
